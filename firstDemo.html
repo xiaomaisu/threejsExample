@@ -17,9 +17,11 @@
 			var renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
+
+
 			//立方体
 			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			var sphereGeometry = new THREE.SphereGeometry( 50, 32, 16 );
+			var sphereGeometry = new THREE.SphereGeometry( .7, 32, 16 );
 			//基本纹理
 			var darkMaterial = new THREE.MeshBasicMaterial( { color: 0x000088 } );
 			//网状纹理
@@ -35,6 +37,10 @@
 			scene.add( cube );
 			scene.add(sphere);
 			scene.add(anotherCube);
+
+			// var light = new THREE.PointLight(0xffffff);
+			// light.position.set(0,250,-20);
+			// scene.add(light);
 			camera.position.z = 5;
 			var firstTime = +new Date();
 			var render = function () {
@@ -44,6 +50,7 @@
 					camera.position.z = 10;
 					camera.updateProjectionMatrix();
 				}
+				camera.position.x += 0.05;
 				cube.rotation.x += 0.1;
 				cube.rotation.y += 0.1;
 				//sphere.rotation.x+= 0.1;
