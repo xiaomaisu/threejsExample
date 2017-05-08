@@ -15,12 +15,10 @@
 	<script src="https://threejs.org/build/three.min.js"></script>
 	<script type="x-shader/x-vertex" id="vertexShader">
       attribute vec3 aVertexPosition;
-      attribute vec4 aVertexColor;
       varying vec3 vWorldPosition;
     
       uniform mat4 uMVMatrix;
       uniform mat4 uPMatrix;
-      
     
       void main(void) {
       	vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
@@ -121,10 +119,11 @@
 			offset:      { value: 33 },
 			exponent:    { value: 0.6 }
 		}
-		var skyGeo = new THREE.SphereGeometry( 4000, 32, 15 );
+		var skyGeo = new THREE.CubeGeometry( 4000, 32, 15 );
 		var skyMat = new THREE.ShaderMaterial( { vertexShader: vertexShader, fragmentShader: fragmentShader, uniforms: uniforms, side: THREE.BackSide } );
 		//var skyMat = new THREE.MeshPhongMaterial( { color: '#ff3520'} );
 		var sky = new THREE.Mesh( skyGeo, skyMat );
+		sky.position.y = -500;
 		scene.add( sky );
 	}
 	window.onload=init;
