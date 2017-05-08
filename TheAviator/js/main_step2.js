@@ -237,7 +237,7 @@ var AirPlane = function(){
   windshield.castShadow = true;
   windshield.receiveShadow = true;
 
-  this.mesh.add(windshield);
+  //this.mesh.add(windshield);
 
   var geomPropeller = new THREE.BoxGeometry(20,10,10,1,1,1);
   geomPropeller.vertices[4].y-=5;
@@ -293,11 +293,11 @@ var AirPlane = function(){
 
   var wheelProtecL = wheelProtecR.clone();
   wheelProtecL.position.z = -wheelProtecR.position.z ;
-  this.mesh.add(wheelProtecL);
+  //this.mesh.add(wheelProtecL);
 
   var wheelTireL = wheelTireR.clone();
   wheelTireL.position.z = -wheelTireR.position.z;
-  this.mesh.add(wheelTireL);
+  //this.mesh.add(wheelTireL);
 
   var wheelTireB = wheelTireR.clone();
   wheelTireB.scale.set(.5,.5,.5);
@@ -310,7 +310,7 @@ var AirPlane = function(){
   var suspension = new THREE.Mesh(suspensionGeom,suspensionMat);
   suspension.position.set(-35,-5,0);
   suspension.rotation.z = -.3;
-  this.mesh.add(suspension);
+  //this.mesh.add(suspension);
 
   this.pilot = new Pilot();
   this.pilot.mesh.position.set(-10,27,0);

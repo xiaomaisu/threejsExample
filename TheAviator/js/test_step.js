@@ -8,7 +8,13 @@ var Colors = {
 	blue: 0x68c3c0
 };
 
-var scene, renderer, container, camera;
+//鼠标位置的记录
+var mousePos = {
+	x: 0,
+	y: 0
+};
+
+var scene, renderer, container, camera, SCREEN_WIDTH, SCREEN_HEIGHT;
 var sky, airplane;
 
 function init() {
@@ -26,14 +32,17 @@ function init() {
 
 	loop();
 
+	//add the listener
+	document.addEventListener('mousemove', handleMouseMove, false);
+
 	//createPerson();
 }
 
 //创建场景
 function createScene() {
 	scene = new THREE.Scene();
-	var SCREEN_WIDTH = window.innerWidth;
-	var SCREEN_HEIGHT = window.innerHeight;
+	SCREEN_WIDTH = window.innerWidth;
+	SCREEN_HEIGHT = window.innerHeight;
 	var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
 	var NEAR = 1;
 	var FAR = 10000;
@@ -47,10 +56,12 @@ function createScene() {
 		antialias: true
 	});
 	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-	//允许阴影出现，必须有
+	//允许阴影出现，必须有,如果没有所有castShadow无效
 	renderer.shadowMap.enabled = true;
 	container = document.getElementById('world');
 	container.appendChild(renderer.domElement);
+
+	//resize屏幕时改变视角等
 	window.addEventListener('resize', handleWindowResize, false);
 }
 
@@ -96,6 +107,10 @@ function createLights() {
 	shadowLight.shadow.camera.far = 1000;
 	shadowLight.shadow.mapSize.width = 2048;
 	shadowLight.shadow.mapSize.height = 2048;
+
+	// an ambient light modifies the global color of a scene and makes the shadows softer
+	var ambientLight = new THREE.AmbientLight(0xdc8874, .5);
+	scene.add(ambientLight);
 	scene.add(hemisphereLight);
 	scene.add(shadowLight);
 }
@@ -124,6 +139,24 @@ function Sea() {
 	var geom = new THREE.CylinderGeometry(600, 600, 800, 40, 10);
 	//旋转圆柱体
 	geom.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+
+	//important: by merging vertices we ensure the continuity of the waves
+	geom.mergeVertices();
+	var l = geom.vertices.length;
+	//waves的获取可修改为参数获取，这样如果有多个海则可根据参数修改
+	this.waves = [];
+	for (var i = 0; i < l; i++) {
+		var v = geom.vertices[i];
+		this.waves.push({
+			y: v.y,
+			x: v.x,
+			z: v.z,
+			ang: Math.random() * Math.PI * 2,
+			amp: 5 + Math.random() * 15,
+			speed: 0.016 + Math.random() * 0.032
+		});
+	};
+
 	var material = new THREE.MeshPhongMaterial({
 		color: Colors.blue,
 		transparent: true,
@@ -135,10 +168,24 @@ function Sea() {
 	// scene.add(mesh);
 }
 
+Sea.prototype.moveWaves = function() {
+	var verts = this.mesh.geometry.vertices;
+	var l = verts.length;
+	for (var i = 0; i < l; i++) {
+		var v = verts[i];
+		var vprops = this.waves[i];
+		v.x = vprops.x + Math.cos(vprops.ang) * vprops.amp;
+		v.y = vprops.y + Math.sin(vprops.ang) * vprops.amp;
+		vprops.ang += vprops.speed;
+	}
+	this.mesh.geometry.verticesNeedUpdate = true;
+	sea.mesh.rotation.z += .005;
+}
+
 function AirPlane() {
 	// body...
 	this.mesh = new THREE.Object3D();
-	var geomCockpit = new THREE.BoxGeometry(60, 50, 50, 1, 1, 1);
+	var geomCockpit = new THREE.BoxGeometry(65, 50, 50, 1, 1, 1);
 	//we can access a specific vertex of a shape through 
 	//the vertices array, and then move its x, y and z property
 	geomCockpit.vertices[4].y -= 10;
@@ -158,6 +205,7 @@ function AirPlane() {
 	cockpit.castShadow = true;
 	this.mesh.add(cockpit);
 
+	//前面白色那一块
 	var geomEngine = new THREE.BoxGeometry(20, 50, 50, 1, 1, 1);
 	var matEngine = new THREE.MeshPhongMaterial({
 		color: Colors.white,
@@ -169,6 +217,7 @@ function AirPlane() {
 	engine.castShadow = true;
 	this.mesh.add(engine);
 
+	//后面翘起来那个红色小角
 	var geomTailPlane = new THREE.BoxGeometry(15, 20, 5, 1, 1, 1);
 	var matTailPlane = new THREE.MeshPhongMaterial({
 		color: Colors.red,
@@ -180,17 +229,19 @@ function AirPlane() {
 	tailPlane.receiveShadow = true;
 	this.mesh.add(tailPlane);
 
-	var geomSideWing = new THREE.BoxGeometry(40, 8, 150, 1, 1, 1);
+	//侧翼
+	var geomSideWing = new THREE.BoxGeometry(34, 8, 150, 1, 1, 1);
 	var matSideWing = new THREE.MeshPhongMaterial({
 		color: Colors.red,
 		shading: THREE.FlatShading
 	});
 	var sideWing = new THREE.Mesh(geomSideWing, matSideWing);
-	sideWing.position.set(0, 0, 0);
+	sideWing.position.set(0, 8, 0);
 	sideWing.castShadow = true;
 	sideWing.receiveShadow = true;
 	this.mesh.add(sideWing);
 
+	//旋转的螺桨
 	var geomPropeller = new THREE.BoxGeometry(20, 10, 10, 1, 1, 1);
 	var matPropeller = new THREE.MeshPhongMaterial({
 		color: Colors.brown,
@@ -205,13 +256,73 @@ function AirPlane() {
 		color: Colors.brownDark,
 		shading: THREE.FlatShading
 	});
+
+	//需有两个交叉的螺桨，因此用到clone
 	var blade = new THREE.Mesh(geomBlade, matBlade);
 	blade.position.set(8, 0, 0);
+	var blade2 = blade.clone();
 	blade.castShadow = true;
 	blade.receiveShadow = true;
+	blade2.rotation.x = Math.PI / 2;
+	blade2.castShadow = true;
+	blade2.receiveShadow = true;
 	this.propeller.add(blade);
+	this.propeller.add(blade2);
 	this.propeller.position.set(50, 0, 0);
 	this.mesh.add(this.propeller);
+
+	//使机身侧面形状从三角变成三角+正方形
+	var wheelProtecGeom = new THREE.BoxGeometry(25, 15, 10, 1, 1, 1);
+	var wheelProtecMat = new THREE.MeshPhongMaterial({
+		color: Colors.red,
+		shading: THREE.FlatShading
+	});
+	var wheelProtecR = new THREE.Mesh(wheelProtecGeom, wheelProtecMat);
+	wheelProtecR.position.set(17, -20, 25);
+	this.mesh.add(wheelProtecR);
+
+	//最下面的灰色的底部
+	var wheelTireGeom = new THREE.BoxGeometry(20, 20, 4);
+	var wheelTireMat = new THREE.MeshPhongMaterial({
+		color: Colors.brownDark,
+		shading: THREE.FlatShading
+	});
+	var wheelTireR = new THREE.Mesh(wheelTireGeom, wheelTireMat);
+	wheelTireR.position.set(17, -28, 25);
+	var wheelAxisGeom = new THREE.BoxGeometry(6, 6, 6);
+	var wheelAxisMat = new THREE.MeshPhongMaterial({
+		color: Colors.brown,
+		shading: THREE.FlatShading
+	});
+	var wheelAxis = new THREE.Mesh(wheelAxisGeom, wheelAxisMat);
+	wheelTireR.add(wheelAxis);
+	this.mesh.add(wheelTireR);
+
+	//对称的部分
+	var wheelProtecL = wheelProtecR.clone();
+	wheelProtecL.position.z = -wheelProtecR.position.z;
+	this.mesh.add(wheelProtecL);
+
+	var wheelTireL = wheelTireR.clone();
+	wheelTireL.position.z = -wheelTireR.position.z;
+	this.mesh.add(wheelTireL);
+
+	var wheelTireB = wheelTireR.clone();
+	wheelTireB.scale.set(.5, .5, .5);
+	wheelTireB.position.set(-30, -3, 0);
+	this.mesh.add(wheelTireB);
+
+	//连接最后面小黑的倾斜的红色长条
+	var suspensionGeom = new THREE.BoxGeometry(4, 12, 4);
+	suspensionGeom.applyMatrix(new THREE.Matrix4().makeTranslation(0, 10, 0))
+	var suspensionMat = new THREE.MeshPhongMaterial({
+		color: Colors.red,
+		shading: THREE.FlatShading
+	});
+	var suspension = new THREE.Mesh(suspensionGeom, suspensionMat);
+	suspension.position.set(-32, -8, 0);
+	suspension.rotation.z = -.3;
+	this.mesh.add(suspension);
 }
 
 function createSea() {
@@ -229,6 +340,17 @@ function createSky() {
 
 function updateAirPlane() {
 	// body...
+	// let's move the airplane between -100 and 100 on the horizontal axis, 
+	// and between 25 and 175 on the vertical axis,
+	// depending on the mouse position which ranges between -1 and 1 on both axes;
+	// to achieve that we use a normalize function (see below)
+
+	var targetX = normalize(mousePos.x, -1, 1, -100, 100);
+	var targetY = normalize(mousePos.y, -1, 1, 25, 175);
+
+	// update the airplane's position
+	airplane.mesh.position.y = targetY;
+	airplane.mesh.position.x = targetX;
 	airplane.propeller.rotation.x += .3;
 }
 
@@ -236,22 +358,42 @@ function createAirplane() {
 	// body...
 	airplane = new AirPlane();
 	airplane.mesh.position.y = 100;
-	airplane.mesh.scale.set(.25, .25, .25, .25);
+	airplane.mesh.scale.set(.3, .3, .3, .3);
 	scene.add(airplane.mesh);
 }
 
 function handleWindowResize() {
 	// body...
-	var HEIGHT = window.innerHeight;
-	var WIDTH = window.innerWidth;
-	renderer.setSize(WIDTH, HEIGHT);
-	camera.aspect = WIDTH / HEIGHT;
+	SCREEN_HEIGHT = window.innerHeight;
+	SCREEN_WIDTH = window.innerWidth;
+	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
 	camera.updateProjectionMatrix();
+}
+
+function handleMouseMove(event) {
+	// body...
+	var tx = -1 + (event.clientX / SCREEN_WIDTH) * 2;
+	var ty = 1 - (event.clientY / SCREEN_HEIGHT) * 2;
+	mousePos = {
+		x: tx,
+		y: ty
+	};
+}
+
+function normalize(v, vmin, vmax, tmin, tmax) {
+	var nv = Math.max(Math.min(v, vmax), vmin);
+	var dv = vmax - vmin;
+	var pc = (nv - vmin) / dv;
+	var dt = tmax - tmin;
+	var tv = tmin + (pc * dt);
+	return tv;
 }
 
 function loop() {
 	// body...
 	//renderer.render(scene, camera);
+	sea.moveWaves();
 	updateAirPlane();
 	sea.mesh.rotation.z += .005;
 	sky.mesh.rotation.z += .01;
