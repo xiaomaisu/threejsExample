@@ -201,7 +201,7 @@ function AirPlane() {
 		shading: THREE.FlatShading
 	});
 	var cockpit = new THREE.Mesh(geomCockpit, matCockpit);
-	cockpit.receiveShadow = true;
+	//cockpit.receiveShadow = true;
 	cockpit.castShadow = true;
 	this.mesh.add(cockpit);
 
@@ -213,7 +213,7 @@ function AirPlane() {
 	});
 	var engine = new THREE.Mesh(geomEngine, matEngine);
 	engine.position.x = 40;
-	engine.receiveShadow = true;
+	//engine.receiveShadow = true;
 	engine.castShadow = true;
 	this.mesh.add(engine);
 
@@ -226,7 +226,7 @@ function AirPlane() {
 	var tailPlane = new THREE.Mesh(geomTailPlane, matTailPlane);
 	tailPlane.position.set(-35, 25, 0);
 	tailPlane.castShadow = true;
-	tailPlane.receiveShadow = true;
+	//tailPlane.receiveShadow = true;
 	this.mesh.add(tailPlane);
 
 	//侧翼
@@ -238,7 +238,7 @@ function AirPlane() {
 	var sideWing = new THREE.Mesh(geomSideWing, matSideWing);
 	sideWing.position.set(0, 8, 0);
 	sideWing.castShadow = true;
-	sideWing.receiveShadow = true;
+	//sideWing.receiveShadow = true;
 	this.mesh.add(sideWing);
 
 	//旋转的螺桨
@@ -249,7 +249,7 @@ function AirPlane() {
 	});
 	this.propeller = new THREE.Mesh(geomPropeller, matPropeller);
 	this.propeller.castShadow = true;
-	this.propeller.receiveShadow = true;
+	//this.propeller.receiveShadow = true;
 
 	var geomBlade = new THREE.BoxGeometry(1, 100, 20, 1, 1, 1);
 	var matBlade = new THREE.MeshPhongMaterial({
@@ -262,10 +262,10 @@ function AirPlane() {
 	blade.position.set(8, 0, 0);
 	var blade2 = blade.clone();
 	blade.castShadow = true;
-	blade.receiveShadow = true;
+	//blade.receiveShadow = true;
 	blade2.rotation.x = Math.PI / 2;
 	blade2.castShadow = true;
-	blade2.receiveShadow = true;
+	//blade2.receiveShadow = true;
 	this.propeller.add(blade);
 	this.propeller.add(blade2);
 	this.propeller.position.set(50, 0, 0);
