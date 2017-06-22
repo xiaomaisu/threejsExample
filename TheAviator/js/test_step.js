@@ -161,7 +161,7 @@ function Sea() {
 		color: Colors.blue,
 		transparent: true,
 		opacity: .6,
-		shading: THREE.FlatShading,
+		//shading: THREE.FlatShading,
 	});
 	this.mesh = new THREE.Mesh(geom, material);
 	this.mesh.receiveShadow = true;

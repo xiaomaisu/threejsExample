@@ -293,13 +293,14 @@ function render() {
 	for(var i=0;i<nfans;i++) {
 		var fan = fans[i];
 		fan.rotation.z +=Math.random() * .02;
+		fan.rotation.y +=Math.random() * .02;
 		fan.position.z -= Math.random();
 		// fan.position.x += Math.random() * .02;
 		// fan.position.y += Math.random() * .02;
 		//fan.rotation.z +=Math.random() * .02;
 	}
 	//initPos += .001;
-	//home.rotation.z += .01;
+	//home.rotation.x += .01;
 	//home.scale.set(initPos, initPos, initPos)
 	renderer.render(scene, camera);
 }
